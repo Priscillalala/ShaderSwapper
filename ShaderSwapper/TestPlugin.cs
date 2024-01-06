@@ -14,6 +14,7 @@ namespace ShaderSwapper
             testBundle ??= AssetBundle.LoadFromFile(System.IO.Path.Combine(System.IO.Path.GetDirectoryName(Info.Location), "testassets"));
             StartCoroutine(testBundle.UpgradeStubbedShadersAsync());
             Material test1 = testBundle.LoadAsset<Material>("matTest4");
+            ShaderSwapper.UpgradeStubbedShader(null);
             StartCoroutine(ShaderSwapper.UpgradeStubbedShaderAsync(test1));
         }
     }
