@@ -75,7 +75,7 @@ namespace ShaderSwapper
                 else
                 {
                     materialCount--;
-                    for (int j = i; j < materialCount; j++)
+                    for (int j = materialCount - i; j < materialCount; j++)
                     {
                         allMaterials[j] = allMaterials[j + 1];
                     }
