@@ -46,7 +46,11 @@ namespace ShaderSwapper
                 }
                 else
                 {
-                    ArrayRemoveAtNoCleanup(allMaterials, i, ref materialCount);
+                    materialCount--;
+                    for (int j = i; j < materialCount; j++)
+                    {
+                        allMaterials[j] = allMaterials[j + 1];
+                    }
                 }
             }
             if (materialCount <= 0)
@@ -70,7 +74,11 @@ namespace ShaderSwapper
                 }
                 else
                 {
-                    ArrayRemoveAtNoCleanup(allMaterials, materialCount - 1 - i, ref materialCount);
+                    materialCount--;
+                    for (int j = i; j < materialCount; j++)
+                    {
+                        allMaterials[j] = allMaterials[j + 1];
+                    }
                 }
             }
             if (materialCount <= 0)
@@ -88,45 +96,6 @@ namespace ShaderSwapper
             for (int i = 0; i < materialCount; i++)
             {
                 ((Material)allMaterials[i]).shader = loadShaders.Result[i];
-                _[startIndex + i] = allMaterials[i];
-            }
-        }
-
-        [Obsolete($"The asynchronous method {nameof(UpgradeStubbedShadersAsync)} is heavily preferred.", false)]
-        public static void UpgradeStubbedShaders(this AssetBundle assetBundle)
-        {
-            if (assetBundle == null)
-            {
-                throw new ArgumentNullException(nameof(assetBundle));
-            }
-            Material[] allMaterials = assetBundle.LoadAllAssets<Material>();
-            int materialCount = allMaterials.Length;
-            if (materialCount <= 0)
-            {
-                return;
-            }
-            for (int i = materialCount - 1; i >= 0; i--)
-            {
-                string cachedShaderName = allMaterials[i].shader.name;
-                if (cachedShaderName.StartsWith(PREFIX))
-                {
-                    IList<IResourceLocation> resourceLocations = Addressables.LoadResourceLocationsAsync(cachedShaderName.Substring(PREFIX_LENGTH) + ".shader", typeof(Shader)).WaitForCompletion();
-                    if (resourceLocations.Count > 0)
-                    {
-                        allMaterials[i].shader = Addressables.LoadAssetAsync<Shader>(resourceLocations[0]).WaitForCompletion();
-                        continue;
-                    }
-                }
-                ArrayRemoveAtNoCleanup(allMaterials, i, ref materialCount);
-            }
-            if (materialCount <= 0)
-            {
-                return;
-            }
-            int startIndex = _.Length;
-            Array.Resize(ref _, startIndex + materialCount);
-            for (int i = 0; i < materialCount; i++)
-            {
                 _[startIndex + i] = allMaterials[i];
             }
         }
@@ -163,6 +132,19 @@ namespace ShaderSwapper
             _[_.Length - 1] = material;
         }
 
+        [Obsolete($"The asynchronous method {nameof(UpgradeStubbedShadersAsync)} is heavily preferred.", false)]
+        public static void UpgradeStubbedShaders(this AssetBundle assetBundle)
+        {
+            if (assetBundle == null)
+            {
+                throw new ArgumentNullException(nameof(assetBundle));
+            }
+            foreach (Material material in assetBundle.LoadAllAssets<Material>())
+            {
+                UpgradeStubbedShader(material);
+            }
+        }
+
         [Obsolete($"The asynchronous method {nameof(UpgradeStubbedShaderAsync)} is heavily preferred.", false)]
         public static void UpgradeStubbedShader(Material material)
         {
@@ -181,16 +163,6 @@ namespace ShaderSwapper
                 material.shader = Addressables.LoadAssetAsync<Shader>(resourceLocations[0]).WaitForCompletion();
                 Array.Resize(ref _, _.Length + 1);
                 _[_.Length - 1] = material;
-            }
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void ArrayRemoveAtNoCleanup<T>(T[] array, int index, ref int length)
-        {
-            length--;
-            for (int i = index; i < length; i++)
-            {
-                array[i] = array[i + 1];
             }
         }
     }
