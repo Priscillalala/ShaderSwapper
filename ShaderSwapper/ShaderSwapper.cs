@@ -1,5 +1,4 @@
-﻿using BepInEx;
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -7,10 +6,12 @@ using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.ResourceManagement.ResourceLocations;
-using System.Runtime.CompilerServices;
 
 namespace ShaderSwapper
 {
+    /// <summary>
+    /// A static library for upgrading stubbed shaders to actual shaders at runtime.
+    /// </summary>
     public static class ShaderSwapper
     {
         const string PREFIX = "Stubbed";
@@ -18,6 +19,13 @@ namespace ShaderSwapper
 
         private static UnityEngine.Object[] _ = Array.Empty<UnityEngine.Object>();
 
+        /// <summary>
+        /// Asynchronously upgrade all stubbed shaders in an asset bundle to real shaders.
+        /// </summary>
+        /// <remarks>
+        /// See the mod page for example usage.
+        /// </remarks>
+        /// <returns>An <see cref="IEnumerator"/> which can be started as a <see cref="Coroutine"/> or yielded in an <see cref="RoR2.ContentManagement.IContentPackProvider"/>.</returns>
         public static IEnumerator UpgradeStubbedShadersAsync(this AssetBundle assetBundle)
         {
             if (assetBundle == null)
@@ -100,6 +108,10 @@ namespace ShaderSwapper
             }
         }
 
+        /// <summary>
+        /// Asynchronously convert the stubbed shader of a single material to a real shader.
+        /// </summary>
+        /// <returns>An <see cref="IEnumerator"/> which can be started as a <see cref="Coroutine"/> or yielded in an <see cref="RoR2.ContentManagement.IContentPackProvider"/>.</returns>
         public static IEnumerator UpgradeStubbedShaderAsync(Material material)
         {
             if (material == null)
@@ -132,6 +144,12 @@ namespace ShaderSwapper
             _[_.Length - 1] = material;
         }
 
+        /// <summary>
+        /// Immediately upgrade all stubbed shaders in an asset bundle to real shaders.
+        /// </summary>
+        /// <remarks>
+        /// This method will block the main thread until completed. <see cref="UpgradeStubbedShadersAsync(AssetBundle)"/> should be used instead.
+        /// </remarks>
         [Obsolete($"The asynchronous method {nameof(UpgradeStubbedShadersAsync)} is heavily preferred.", false)]
         public static void UpgradeStubbedShaders(this AssetBundle assetBundle)
         {
@@ -145,6 +163,12 @@ namespace ShaderSwapper
             }
         }
 
+        /// <summary>
+        /// Immediately convert the stubbed shader of a single material to a real shader.
+        /// </summary>
+        /// <remarks>
+        /// This method will block the main thread until completed. <see cref="UpgradeStubbedShaderAsync(Material)"/> should be used instead.
+        /// </remarks>
         [Obsolete($"The asynchronous method {nameof(UpgradeStubbedShaderAsync)} is heavily preferred.", false)]
         public static void UpgradeStubbedShader(Material material)
         {

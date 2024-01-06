@@ -3,7 +3,17 @@
 	<PropertyGroup>
 		<TargetFramework>netstandard2.0</TargetFramework>
 		<LangVersion>preview</LangVersion>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 	</PropertyGroup>
+
+	<ItemGroup>
+	  <Content Include="..\manifest.json" Link="manifest.json" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Include="..\CHANGELOG.md" Link="CHANGELOG.md" />
+	  <None Include="..\README.md" Link="README.md" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="BepInEx.Core" Version="5.4.21" />
