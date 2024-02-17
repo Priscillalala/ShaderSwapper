@@ -22,8 +22,12 @@ Alternatively, you could yield `UpgradeStubbedShadersAsync` in your `IContentPac
 public IEnumerator FinalizeAsync(FinalizeAsyncArgs args)
 {
     // ...
-
-    yield return myAssetBundle.UpgradeStubbedShadersAsync();
+    
+    var upgradeStubbedShaders = myAssetBundle.UpgradeStubbedShadersAsync();
+    while (upgradeStubbedShaders.MoveNext())
+    {
+        yield return upgradeStubbedShaders.Current;
+    }
 
     // ...
 }

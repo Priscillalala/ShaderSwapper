@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement;
@@ -33,9 +34,9 @@ namespace ShaderSwapper
                 throw new ArgumentNullException(nameof(assetBundle));
             }
             AssetBundleRequest loadMaterials = assetBundle.LoadAllAssetsAsync<Material>();
-            if (!loadMaterials.isDone)
+            while (!loadMaterials.isDone)
             {
-                yield return loadMaterials;
+                yield return null;
             }
             UnityEngine.Object[] allMaterials = loadMaterials.allAssets;
             int materialCount = allMaterials.Length;
@@ -67,9 +68,9 @@ namespace ShaderSwapper
             }
 
             AsyncOperationHandle<IList<AsyncOperationHandle>> loadResourceLocationsGroup = Addressables.ResourceManager.CreateGenericGroupOperation(loadResourceLocationsOperations);
-            if (!loadResourceLocationsGroup.IsDone)
+            while (!loadResourceLocationsGroup.IsDone)
             {
-                yield return loadResourceLocationsGroup;
+                yield return null;
             }
 
             List<IResourceLocation> resourceLocations = new List<IResourceLocation>(materialCount);
@@ -95,15 +96,15 @@ namespace ShaderSwapper
             }
 
             AsyncOperationHandle<IList<Shader>> loadShaders = Addressables.LoadAssetsAsync<Shader>(resourceLocations, null, false);
-            if (!loadShaders.IsDone)
+            while (!loadShaders.IsDone)
             {
-                yield return loadShaders;
+                yield return null;
             }
             int startIndex = _.Length;
             Array.Resize(ref _, startIndex + materialCount);
             for (int i = 0; i < materialCount; i++)
             {
-                ((Material)allMaterials[i]).shader = loadShaders.Result[i];
+                SwapShader((Material)allMaterials[i], loadShaders.Result[i]);
                 _[startIndex + i] = allMaterials[i];
             }
         }
@@ -125,9 +126,9 @@ namespace ShaderSwapper
             }
 
             AsyncOperationHandle<IList<IResourceLocation>> loadResourceLocations = Addressables.LoadResourceLocationsAsync(cachedShaderName.Substring(PREFIX_LENGTH) + ".shader", typeof(Shader));
-            if (!loadResourceLocations.IsDone)
+            while (!loadResourceLocations.IsDone)
             {
-                yield return loadResourceLocations;
+                yield return null;
             }
             if (loadResourceLocations.Result.Count <= 0)
             {
@@ -135,11 +136,11 @@ namespace ShaderSwapper
             }
 
             AsyncOperationHandle<Shader> loadShader = Addressables.LoadAssetAsync<Shader>(loadResourceLocations.Result[0]);
-            if (!loadShader.IsDone)
+            while (!loadShader.IsDone)
             {
-                yield return loadShader;
+                yield return null;
             }
-            material.shader = loadShader.Result;
+            SwapShader(material, loadShader.Result);
             Array.Resize(ref _, _.Length + 1);
             _[_.Length - 1] = material;
         }
@@ -184,10 +185,18 @@ namespace ShaderSwapper
             IList<IResourceLocation> resourceLocations = Addressables.LoadResourceLocationsAsync(cachedShaderName.Substring(PREFIX_LENGTH) + ".shader", typeof(Shader)).WaitForCompletion();
             if (resourceLocations.Count > 0)
             {
-                material.shader = Addressables.LoadAssetAsync<Shader>(resourceLocations[0]).WaitForCompletion();
+                SwapShader(material, Addressables.LoadAssetAsync<Shader>(resourceLocations[0]).WaitForCompletion());
                 Array.Resize(ref _, _.Length + 1);
                 _[_.Length - 1] = material;
             }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void SwapShader(Material material, Shader shader) 
+        {
+            int renderQueue = material.renderQueue;
+            material.shader = shader;
+            material.renderQueue = renderQueue;
         }
     }
 }
